@@ -7,10 +7,12 @@ async function bootstrap() {
 
   const config = new DocumentBuilder()
     .setTitle('API Auth')
-    .setDescription('API pour l\'authentification et la gestion des utilisateurs')
+    .setDescription(
+      "API pour l'authentification et la gestion des utilisateurs",
+    )
     .setVersion('1.0')
     .addBearerAuth(
-      { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' }, 
+      { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' },
       'access-token',
     )
     .build();
