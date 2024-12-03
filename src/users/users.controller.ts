@@ -47,16 +47,17 @@ export class UsersController {
     @Req() req,
   ) {
     const loggedInUserId = req.user.userId;
-    console.log(
-      `Updating User ID: ${userId}, Logged in User ID: ${loggedInUserId}`,
+    return this.usersService.update(
+      Number(userId),
+      Number(loggedInUserId),
+      updateUserDto,
     );
-    return this.usersService.update(userId, loggedInUserId, updateUserDto);
   }
 
   @ApiOperation({ summary: 'Supprimer votre compte' })
   @Delete(':id')
   remove(@Param('id') userId: number, @Req() req) {
     const loggedInUserId = req.user.userId;
-    return this.usersService.remove(userId, loggedInUserId);
+    return this.usersService.remove(Number(userId), Number(loggedInUserId));
   }
 }

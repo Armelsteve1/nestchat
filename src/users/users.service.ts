@@ -58,11 +58,8 @@ export class UsersService {
     loggedInUserId: number,
     updateUserDto: UpdateUserDto,
   ): Promise<User> {
-    console.log(
-      `User ID to update: ${userId}, Logged in User ID: ${loggedInUserId}`,
-    );
-
-    if (userId !== loggedInUserId) {
+    if (Number(userId) !== Number(loggedInUserId)) {
+      console.error('Condition failed: User IDs do not match');
       throw new UnauthorizedException('You can only update your own account');
     }
 
@@ -74,12 +71,9 @@ export class UsersService {
     return this.userRepository.save(updatedUser);
   }
 
-  /**
-   * @param userId
-   * @param loggedInUserId
-   */
   async remove(userId: number, loggedInUserId: number): Promise<void> {
-    if (userId !== loggedInUserId) {
+    if (Number(userId) !== Number(loggedInUserId)) {
+      console.error('Condition failed: User IDs do not match');
       throw new UnauthorizedException('You can only delete your own account');
     }
 
