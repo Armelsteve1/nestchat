@@ -13,26 +13,20 @@ on:
 
 jobs:
   build-and-test:
-    name: Construire, Tester et Linter
+    name: Build, Test, and Lint
     runs-on: ubuntu-latest
-
-    env:
-      POSTGRES_USER: ${{ secrets.DB_USERNAME }}
-      POSTGRES_PASSWORD: ${{ secrets.DB_PASSWORD }}
-      POSTGRES_DB: ${{ secrets.DB_DATABASE }}
-      MONGO_URI: ${{ secrets.MONGO_URI }}
 
     services:
       postgres:
         image: postgres:latest
         env:
-          POSTGRES_USER: $POSTGRES_USER
-          POSTGRES_PASSWORD: $POSTGRES_PASSWORD
-          POSTGRES_DB: $POSTGRES_DB
+          POSTGRES_USER: ${{ secrets.DB_USERNAME }}
+          POSTGRES_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          POSTGRES_DB: ${{ secrets.DB_DATABASE }}
         ports:
           - 5432:5432
         options: >-
-          --health-cmd="pg_isready -U $POSTGRES_USER"
+          --health-cmd="pg_isready -U ${{ secrets.DB_USERNAME }}"
           --health-interval=10s
           --health-timeout=5s
           --health-retries=3
@@ -47,54 +41,54 @@ jobs:
           --health-retries=3
 
     steps:
-    - name: Télécharger le code
+    - name: Checkout code
       uses: actions/checkout@v3
 
-    - name: Configurer Node.js
+    - name: Set up Node.js
       uses: actions/setup-node@v3
       with:
         node-version: 18
 
-    - name: Installer les dépendances
+    - name: Install dependencies
       run: npm install
 
-    - name: Exécuter le linting
+    - name: Run linting
       run: npm run lint
 
-    - name: Exécuter les tests
+    - name: Run tests
       env:
-        DATABASE_URL: postgres://$POSTGRES_USER:$POSTGRES_PASSWORD@localhost:5432/$POSTGRES_DB
-        MONGO_URI: $MONGO_URI
+        DATABASE_URL: postgres://${{ secrets.DB_USERNAME }}:${{ secrets.DB_PASSWORD }}@localhost:5432/${{ secrets.DB_DATABASE }}
+        MONGO_URI: ${{ secrets.MONGO_URI }}
       run: npm run test
 
   docker-build-and-push:
-    name: Construire et Pousser l'image Docker
+    name: Build and Push Docker Image
     runs-on: ubuntu-latest
     needs: build-and-test
 
     steps:
-    - name: Télécharger le code
+    - name: Checkout code
       uses: actions/checkout@v3
 
-    - name: Se connecter à DockerHub
+    - name: Log in to DockerHub
       uses: docker/login-action@v2
       with:
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_PASSWORD }}
 
-    - name: Construire l'image Docker
+    - name: Build Docker Image
       run: docker build -t ${{ secrets.DOCKER_USERNAME }}/nestchat:latest .
 
-    - name: Pousser l'image Docker
+    - name: Push Docker Image
       run: docker push ${{ secrets.DOCKER_USERNAME }}/nestchat:latest
 
   deploy:
-    name: Déployer en production
+    name: Deploy to Production
     runs-on: ubuntu-latest
     needs: docker-build-and-push
 
     steps:
-    - name: Se connecter en SSH et déployer
+    - name: SSH into Server and Deploy
       uses: appleboy/ssh-action@v0.1.3
       with:
         host: ${{ secrets.SERVER_HOST }}
@@ -105,8 +99,8 @@ jobs:
           docker stop nestchat || true
           docker rm nestchat || true
           docker run -d --name nestchat -p 3000:3000 \
-            --env POSTGRES_USER=$POSTGRES_USER \
-            --env POSTGRES_PASSWORD=$POSTGRES_PASSWORD \
-            --env POSTGRES_DB=$POSTGRES_DB \
-            --env MONGO_URI=$MONGO_URI \
+            --env POSTGRES_USER=${{ secrets.DB_USERNAME }} \
+            --env POSTGRES_PASSWORD=${{ secrets.DB_PASSWORD }} \
+            --env POSTGRES_DB=${{ secrets.DB_DATABASE }} \
+            --env MONGO_URI=${{ secrets.MONGO_URI }} \
             ${{ secrets.DOCKER_USERNAME }}/nestchat:latest
