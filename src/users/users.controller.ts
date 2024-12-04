@@ -12,7 +12,7 @@ import {
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { UsersService } from './users.service';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @ApiTags('Users')
 @ApiBearerAuth('access-token')
@@ -21,25 +21,25 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  @ApiOperation({ summary: 'Récupérer tous les utilisateurs' })
+  @ApiOperation({ summary: 'Retrieve all users' })
   @Get()
   findAll() {
     return this.usersService.findAll();
   }
 
-  @ApiOperation({ summary: 'Récupérer un utilisateur par ID' })
+  @ApiOperation({ summary: 'Retrieve a user by ID' })
   @Get(':id')
   findOne(@Param('id') userId: number) {
     return this.usersService.findOne(userId);
   }
 
-  @ApiOperation({ summary: 'Récupérer un utilisateur par email' })
+  @ApiOperation({ summary: 'Retrieve a user by email' })
   @Get('search/by-email')
   findByEmail(@Query('email') email: string) {
     return this.usersService.findByEmail(email);
   }
 
-  @ApiOperation({ summary: 'Mettre à jour votre compte' })
+  @ApiOperation({ summary: 'Update your account' })
   @Patch(':id')
   update(
     @Param('id') userId: number,
@@ -54,7 +54,7 @@ export class UsersController {
     );
   }
 
-  @ApiOperation({ summary: 'Supprimer votre compte' })
+  @ApiOperation({ summary: 'Delete your account' })
   @Delete(':id')
   remove(@Param('id') userId: number, @Req() req) {
     const loggedInUserId = req.user.userId;

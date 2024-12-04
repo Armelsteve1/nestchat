@@ -16,7 +16,7 @@ import {
 import { AuthService } from './auth.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { LoginUserDto } from './dto/login-user.dto';
-import { JwtAuthGuard } from './jwt-auth.guard';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { ApiQuery } from '@nestjs/swagger';
 
 @ApiTags('Auth')
@@ -24,28 +24,28 @@ import { ApiQuery } from '@nestjs/swagger';
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  @ApiOperation({ summary: "Inscription d'un nouvel utilisateur" })
-  @ApiResponse({ status: 201, description: 'Utilisateur inscrit avec succès.' })
-  @ApiResponse({ status: 400, description: 'Données invalides.' })
+  @ApiOperation({ summary: 'Register a new user' })
+  @ApiResponse({ status: 201, description: 'User successfully registered.' })
+  @ApiResponse({ status: 400, description: 'Invalid data provided.' })
   @Post('register')
   register(@Body() createUserDto: CreateUserDto) {
     return this.authService.register(createUserDto);
   }
 
-  @ApiOperation({ summary: "Connexion d'un utilisateur existant" })
-  @ApiResponse({ status: 200, description: 'Connexion réussie.' })
-  @ApiResponse({ status: 401, description: 'Identifiants invalides.' })
+  @ApiOperation({ summary: 'Login an existing user' })
+  @ApiResponse({ status: 200, description: 'Login successful.' })
+  @ApiResponse({ status: 401, description: 'Invalid credentials.' })
   @Post('login')
   login(@Body() loginUserDto: LoginUserDto) {
     return this.authService.login(loginUserDto);
   }
 
   @ApiBearerAuth('access-token')
-  @ApiOperation({ summary: "Déconnexion d'un utilisateur" })
-  @ApiResponse({ status: 200, description: 'Déconnexion réussie.' })
+  @ApiOperation({ summary: 'Logout a user' })
+  @ApiResponse({ status: 200, description: 'Logout successful.' })
   @ApiResponse({
     status: 401,
-    description: 'Token invalide ou utilisateur non trouvé.',
+    description: 'Invalid token or user not found.',
   })
   @UseGuards(JwtAuthGuard)
   @Post('logout')
@@ -55,18 +55,18 @@ export class AuthController {
   }
 
   @ApiBearerAuth('access-token')
-  @ApiOperation({ summary: "Obtenir le statut de l'utilisateur" })
-  @ApiResponse({ status: 200, description: 'Statut retourné avec succès.' })
+  @ApiOperation({ summary: 'Get user status' })
+  @ApiResponse({ status: 200, description: 'Status retrieved successfully.' })
   @ApiResponse({
     status: 401,
-    description: 'Token invalide ou utilisateur non trouvé.',
+    description: 'Invalid token or user not found.',
   })
   @UseGuards(JwtAuthGuard)
   @Get('status')
   @ApiQuery({
     name: 'userId',
     required: false,
-    description: "ID de l'utilisateur (facultatif, sinon extrait du token)",
+    description: 'Optional user ID (otherwise extracted from token).',
   })
   getStatus(@Req() req, @Query('userId') userId?: number) {
     const id = userId || req.user.userId;

@@ -8,7 +8,7 @@ import {
   OnGatewayDisconnect,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import { MessagingService } from '../messaging/messaging.service';
+import { MessagingService } from '../messaging.service';
 
 @WebSocketGateway({
   cors: {
@@ -28,7 +28,6 @@ export class MessagingGateway
     const userId = client.handshake.query.userId as string;
 
     if (!userId) {
-      console.error('[Server] Connection attempt without userId');
       client.disconnect();
       return;
     }
@@ -56,7 +55,6 @@ export class MessagingGateway
     @ConnectedSocket() client: Socket,
   ) {
     if (!data.senderId || !data.recipientId || !data.content) {
-      console.error('[Server] Invalid message payload:', data);
       return { status: 'error', message: 'Invalid payload' };
     }
 
@@ -73,7 +71,6 @@ export class MessagingGateway
 
       return { status: 'success', data: savedMessage };
     } catch (error) {
-      console.error('[Server] Error while handling sendMessage:', error);
       throw error;
     }
   }

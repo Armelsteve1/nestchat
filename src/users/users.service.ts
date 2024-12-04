@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { User } from './users.entity';
+import { User } from './schemas/users.schema';
 import { UpdateUserDto } from './dto/update-user.dto';
 import * as bcrypt from 'bcryptjs';
 
@@ -16,17 +16,10 @@ export class UsersService {
     private readonly userRepository: Repository<User>,
   ) {}
 
-  /**
-   * @returns
-   */
   async findAll(): Promise<User[]> {
     return this.userRepository.find();
   }
 
-  /**
-   * @param id
-   * @returns
-   */
   async findOne(id: number): Promise<User> {
     const user = await this.userRepository.findOneBy({ id });
     if (!user) {
@@ -35,10 +28,6 @@ export class UsersService {
     return user;
   }
 
-  /**
-   * @param email
-   * @returns
-   */
   async findByEmail(email: string): Promise<User> {
     const user = await this.userRepository.findOneBy({ email });
     if (!user) {
@@ -47,12 +36,6 @@ export class UsersService {
     return user;
   }
 
-  /**
-   * @param userId
-   * @param loggedInUserId
-   * @param updateUserDto
-   * @returns
-   */
   async update(
     userId: number,
     loggedInUserId: number,
@@ -64,9 +47,11 @@ export class UsersService {
     }
 
     const user = await this.findOne(userId);
+
     if (updateUserDto.password) {
       updateUserDto.password = await bcrypt.hash(updateUserDto.password, 10);
     }
+
     const updatedUser = this.userRepository.merge(user, updateUserDto);
     return this.userRepository.save(updatedUser);
   }
