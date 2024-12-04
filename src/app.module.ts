@@ -6,7 +6,7 @@ import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { MessagingModule } from './messaging/messaging.module';
 import { AppController } from './app.controller';
-import { WebSocketModule } from './messaging/websocket.module';
+import { WebSocketModule } from './messaging/websocket/websocket.module';
 
 @Module({
   imports: [

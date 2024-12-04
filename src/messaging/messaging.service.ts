@@ -13,15 +13,13 @@ export class MessagingService {
     @InjectModel(Message.name)
     private readonly messageModel: Model<MessageDocument>,
   ) {}
+
   async sendMessage(senderId: number, recipientId: number, content: string) {
     const recentMessage = await this.messageModel
-      .findOne({
-        senderId,
-        recipientId,
-        content,
-      })
+      .findOne({ senderId, recipientId, content })
       .sort({ createdAt: -1 })
       .exec();
+
     if (recentMessage && recentMessage.createdAt) {
       const now = new Date();
       const timeDifference = now.getTime() - recentMessage.createdAt.getTime();
@@ -31,15 +29,16 @@ export class MessagingService {
       }
     }
 
-    const message = new this.messageModel({
+    const message = await this.messageModel.create({
       senderId,
       recipientId,
       content,
       isRead: false,
     });
 
-    return message.save();
+    return message;
   }
+
   async getMessagesBetweenUsers(
     userId1: number,
     userId2: number,
@@ -54,6 +53,7 @@ export class MessagingService {
       .sort({ createdAt: 1 })
       .exec();
   }
+
   async markAsRead(messageId: string): Promise<Message> {
     const message = await this.messageModel.findById(messageId).exec();
     if (!message) {
@@ -62,6 +62,7 @@ export class MessagingService {
     message.isRead = true;
     return message.save();
   }
+
   async updateMessage(
     messageId: string,
     userId: number,
@@ -86,6 +87,9 @@ export class MessagingService {
     if (message.senderId !== userId) {
       throw new UnauthorizedException('You can only delete your own messages');
     }
-    await this.messageModel.deleteOne({ _id: messageId }).exec();
+    const deleteResult = await this.messageModel.deleteOne({ _id: messageId });
+    if (!deleteResult.deletedCount) {
+      throw new NotFoundException('Failed to delete the message');
+    }
   }
 }

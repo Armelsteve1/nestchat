@@ -12,7 +12,7 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { MessagingService } from './messaging.service';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CreateMessageDto } from './dto/create-message.dto';
 import { UpdateMessageDto } from './dto/update-message.dto';
 
@@ -23,7 +23,7 @@ import { UpdateMessageDto } from './dto/update-message.dto';
 export class MessagingController {
   constructor(private readonly messagingService: MessagingService) {}
 
-  @ApiOperation({ summary: 'Envoyer un message' })
+  @ApiOperation({ summary: 'Send a message' })
   @Post()
   sendMessage(@Body() createMessageDto: CreateMessageDto, @Req() req) {
     const loggedInUserId = Number(req.user.userId);
@@ -40,7 +40,7 @@ export class MessagingController {
     );
   }
 
-  @ApiOperation({ summary: 'Récupérer les messages entre deux utilisateurs' })
+  @ApiOperation({ summary: 'Retrieve messages between two users' })
   @Get(':userId1/:userId2')
   getMessagesBetweenUsers(
     @Param('userId1') userId1: number,
@@ -57,13 +57,13 @@ export class MessagingController {
     return this.messagingService.getMessagesBetweenUsers(userId1, userId2);
   }
 
-  @ApiOperation({ summary: 'Marquer un message comme lu' })
+  @ApiOperation({ summary: 'Mark a message as read' })
   @Patch(':messageId/read')
   markAsRead(@Param('messageId') messageId: string) {
     return this.messagingService.markAsRead(messageId);
   }
 
-  @ApiOperation({ summary: 'Modifier un message' })
+  @ApiOperation({ summary: 'Update a message' })
   @Patch(':messageId')
   updateMessage(
     @Param('messageId') messageId: string,
@@ -78,7 +78,7 @@ export class MessagingController {
     );
   }
 
-  @ApiOperation({ summary: 'Supprimer un message' })
+  @ApiOperation({ summary: 'Delete a message' })
   @Delete(':messageId')
   deleteMessage(@Param('messageId') messageId: string, @Req() req) {
     const loggedInUserId = Number(req.user.userId);

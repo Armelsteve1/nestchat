@@ -13,4 +13,10 @@ export class User {
 
   @Column({ default: false })
   isActive: boolean;
+
+  @Column({ nullable: true })
+  username?: string;
+
+  @Column({ nullable: true })
+  photo?: string;
 }

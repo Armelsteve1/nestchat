@@ -3,8 +3,8 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class UpdateMessageDto {
   @ApiProperty({
-    description: 'Nouveau contenu du message',
-    example: 'Message modifié avec succès.',
+    description: 'New message content',
+    example: 'Message updated successfully.',
   })
   @IsString()
   @IsNotEmpty()
