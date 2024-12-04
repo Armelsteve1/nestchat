@@ -40,15 +40,16 @@ Create a `.env` file in the root directory and configure the following variables
 
 ```env
 # PostgreSQL
-POSTGRES_USER=postgres
+POSTGRES_USER=user
 POSTGRES_PASSWORD=password
-POSTGRES_DB=nestchat
+POSTGRES_DB=db
 
 # MongoDB
 MONGODB_URI= mongodb
 
 # Application
-APP_PORT=3000
+JWT_SECRET=secret
+PORT=3000
 ```
 
 ---
