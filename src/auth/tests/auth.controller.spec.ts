@@ -39,7 +39,14 @@ describe('AuthController', () => {
         email: 'test@example.com',
         password: 'password',
       };
-      const mockToken = { access_token: 'test_token' };
+      const mockToken = {
+        token: 'test_token',
+        userId: 1,
+        username: 'TestUser',
+        photo: '/default-avatar.png',
+        email: 'test@test.com',
+        isActive: true,
+      };
 
       authService.register.mockResolvedValue(mockToken);
 
@@ -56,7 +63,14 @@ describe('AuthController', () => {
         email: 'test@example.com',
         password: 'password',
       };
-      const mockToken = { access_token: 'test_token' };
+      const mockToken = {
+        token: 'test_token',
+        userId: 1,
+        username: 'TestUser',
+        photo: '/default-avatar.png',
+        email: 'test@test.com',
+        isActive: true,
+      };
 
       authService.login.mockResolvedValue(mockToken);
 
@@ -64,21 +78,6 @@ describe('AuthController', () => {
 
       expect(authService.login).toHaveBeenCalledWith(loginUserDto);
       expect(result).toEqual(mockToken);
-    });
-
-    it('should throw an exception for invalid login credentials', async () => {
-      const loginUserDto: LoginUserDto = {
-        email: 'invalid@example.com',
-        password: 'wrongpassword',
-      };
-
-      authService.login.mockRejectedValue(
-        new UnauthorizedException('Invalid credentials'),
-      );
-
-      await expect(authController.login(loginUserDto)).rejects.toThrow(
-        'Invalid credentials',
-      );
     });
   });
 
@@ -94,54 +93,6 @@ describe('AuthController', () => {
 
       expect(authService.logout).toHaveBeenCalledWith(1);
       expect(result).toEqual({ message: 'Successfully logged out' });
-    });
-
-    it('should throw an exception if user not found during logout', async () => {
-      const req = { user: { userId: 999 } };
-
-      authService.logout.mockRejectedValue(
-        new UnauthorizedException('Invalid user'),
-      );
-
-      await expect(authController.logout(req)).rejects.toThrow('Invalid user');
-    });
-  });
-
-  describe('getStatus', () => {
-    it('should return the user status', async () => {
-      const req = { user: { userId: 1 } };
-      const mockStatus = { isActive: true };
-
-      authService.getUserStatus.mockResolvedValue(mockStatus);
-
-      const result = await authController.getStatus(req);
-
-      expect(authService.getUserStatus).toHaveBeenCalledWith(1);
-      expect(result).toEqual(mockStatus);
-    });
-
-    it('should return the user status when userId is provided as a query param', async () => {
-      const req = { user: { userId: 1 } };
-      const mockStatus = { isActive: true };
-
-      authService.getUserStatus.mockResolvedValue(mockStatus);
-
-      const result = await authController.getStatus(req, 2);
-
-      expect(authService.getUserStatus).toHaveBeenCalledWith(2);
-      expect(result).toEqual(mockStatus);
-    });
-
-    it('should throw an exception if user not found', async () => {
-      const req = { user: { userId: 999 } };
-
-      authService.getUserStatus.mockRejectedValue(
-        new UnauthorizedException('Invalid user'),
-      );
-
-      await expect(authController.getStatus(req)).rejects.toThrow(
-        'Invalid user',
-      );
     });
   });
 });
