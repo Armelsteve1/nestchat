@@ -20,7 +20,9 @@ export class MessagingGateway
 {
   @WebSocketServer()
   server: Server;
+
   private connectedClients = new Map<string, string>();
+  private processedMessages = new Set<string>();
 
   constructor(private readonly messagingService: MessagingService) {}
 
@@ -31,8 +33,8 @@ export class MessagingGateway
       client.disconnect();
       return;
     }
-    this.connectedClients.set(userId, client.id);
 
+    this.connectedClients.set(userId, client.id);
     client.join(`user_${userId}`);
   }
 
@@ -43,8 +45,6 @@ export class MessagingGateway
 
     if (userId) {
       this.connectedClients.delete(userId);
-    } else {
-      return client.id;
     }
   }
 
@@ -64,9 +64,18 @@ export class MessagingGateway
         data.recipientId,
         data.content,
       );
-      client.emit('messageSent', savedMessage);
+
+      if (this.processedMessages.has(savedMessage._id.toString())) {
+        return { status: 'error', message: 'Message already processed' };
+      }
+
+      this.processedMessages.add(savedMessage._id.toString());
+
       this.server
         .to(`user_${data.recipientId}`)
+        .emit('messageReceived', savedMessage);
+      this.server
+        .to(`user_${data.senderId}`)
         .emit('messageReceived', savedMessage);
 
       return { status: 'success', data: savedMessage };

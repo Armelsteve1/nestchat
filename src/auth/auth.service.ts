@@ -67,7 +67,10 @@ export class AuthService {
 
   private generateResponse(user: User) {
     return {
-      token: this.jwtService.sign({ email: user.email, sub: user.id }),
+      token: this.jwtService.sign(
+        { email: user.email, sub: user.id },
+        { expiresIn: '15m' },
+      ),
       userId: user.id,
       username: user.username || 'Anonymous',
       photo: user.photo || '/default-avatar.png',
