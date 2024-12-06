@@ -24,11 +24,10 @@ export class MessagingService {
       const now = new Date();
       const timeDifference = now.getTime() - recentMessage.createdAt.getTime();
 
-      if (timeDifference < 1000) {
+      if (timeDifference < 500) {
         return recentMessage;
       }
     }
-
     const message = await this.messageModel.create({
       senderId,
       recipientId,

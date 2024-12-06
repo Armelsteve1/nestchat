@@ -42,18 +42,11 @@ export class MessagingController {
 
   @ApiOperation({ summary: 'Retrieve messages between two users' })
   @Get(':userId1/:userId2')
-  getMessagesBetweenUsers(
+  @Get(':userId1/:userId2')
+  async getMessagesBetweenUsers(
     @Param('userId1') userId1: number,
     @Param('userId2') userId2: number,
-    @Req() req,
   ) {
-    const loggedInUserId = Number(req.user.userId);
-    if (loggedInUserId !== userId1 && loggedInUserId !== userId2) {
-      throw new UnauthorizedException(
-        'You can only view conversations you are part of',
-      );
-    }
-
     return this.messagingService.getMessagesBetweenUsers(userId1, userId2);
   }
 

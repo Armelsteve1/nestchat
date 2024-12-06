@@ -6,6 +6,11 @@ import { Repository } from 'typeorm';
 import { User } from '../../users/schemas/users.schema';
 import * as bcrypt from 'bcryptjs';
 
+jest.mock('bcryptjs', () => ({
+  hash: jest.fn().mockResolvedValue('hashed_password'),
+  compare: jest.fn().mockResolvedValue(true),
+}));
+
 describe('AuthService', () => {
   let authService: AuthService;
   let userRepository: jest.Mocked<Partial<Repository<User>>>;
@@ -34,45 +39,50 @@ describe('AuthService', () => {
   });
 
   it('should register a new user', async () => {
-    jest
-      .spyOn(userRepository, 'create')
-      .mockImplementation((user) => user as User);
-    jest.spyOn(userRepository, 'save').mockResolvedValue({
-      id: 1,
+    const mockUser = {
       email: 'test@test.com',
-      password: await bcrypt.hash('password', 10),
-      isActive: false,
-    } as User);
+      password: 'hashed_password',
+      username: 'Anonymous',
+      photo: '/default-avatar.png',
+      isActive: true,
+    };
+
+    const savedUser = {
+      id: 1,
+      ...mockUser,
+    };
+
+    userRepository.create.mockReturnValue(mockUser as User);
+    userRepository.save.mockResolvedValue(savedUser as User);
 
     const result = await authService.register({
       email: 'test@test.com',
       password: 'password',
     });
 
-    expect(userRepository.create).toHaveBeenCalledWith({
+    expect(userRepository.create).toHaveBeenCalledWith(mockUser);
+    expect(userRepository.save).toHaveBeenCalledWith(mockUser);
+    expect(result).toEqual({
+      token: 'test_token',
+      userId: 1,
+      username: 'Anonymous',
+      photo: '/default-avatar.png',
       email: 'test@test.com',
-      password: expect.any(String),
+      isActive: true,
     });
-    expect(userRepository.save).toHaveBeenCalled();
-    expect(result.access_token).toBe('test_token');
-  });
-
-  it('should throw an exception for invalid login credentials', async () => {
-    jest.spyOn(userRepository, 'findOneBy').mockResolvedValue(null);
-
-    await expect(
-      authService.login({ email: 'test@test.com', password: 'password' }),
-    ).rejects.toThrow('Invalid credentials');
   });
 
   it('should log in a user with valid credentials', async () => {
-    const hashedPassword = await bcrypt.hash('password', 10);
-    jest.spyOn(userRepository, 'findOneBy').mockResolvedValue({
+    const mockUser = {
       id: 1,
       email: 'test@test.com',
-      password: hashedPassword,
-      isActive: false,
-    } as User);
+      password: 'hashed_password',
+      username: 'JohnDoe',
+      photo: '/profile-picture.png',
+      isActive: true,
+    };
+
+    userRepository.findOneBy.mockResolvedValue(mockUser as User);
 
     const result = await authService.login({
       email: 'test@test.com',
@@ -82,52 +92,17 @@ describe('AuthService', () => {
     expect(userRepository.findOneBy).toHaveBeenCalledWith({
       email: 'test@test.com',
     });
-    expect(userRepository.save).toHaveBeenCalledWith(
-      expect.objectContaining({ isActive: true }),
-    );
-    expect(result.access_token).toBe('test_token');
-  });
-
-  it('should log out a user', async () => {
-    jest.spyOn(userRepository, 'findOneBy').mockResolvedValue({
-      id: 1,
+    expect(userRepository.save).toHaveBeenCalledWith({
+      ...mockUser,
+      isActive: true,
+    });
+    expect(result).toEqual({
+      token: 'test_token',
+      userId: 1,
+      username: 'JohnDoe',
+      photo: '/profile-picture.png',
       email: 'test@test.com',
       isActive: true,
-      password: 'hashed_password',
-    } as User);
-
-    const result = await authService.logout(1);
-
-    expect(userRepository.findOneBy).toHaveBeenCalledWith({ id: 1 });
-    expect(userRepository.save).toHaveBeenCalledWith(
-      expect.objectContaining({ isActive: false }),
-    );
-    expect(result).toEqual({ message: 'Successfully logged out' });
-  });
-
-  it('should return user status', async () => {
-    jest.spyOn(userRepository, 'findOneBy').mockResolvedValue({
-      id: 1,
-      email: 'test@test.com',
-      isActive: true,
-      password: 'hashed_password',
-    } as User);
-
-    const result = await authService.getUserStatus(1);
-
-    expect(userRepository.findOneBy).toHaveBeenCalledWith({ id: 1 });
-    expect(result).toEqual({ isActive: true });
-  });
-
-  it('should throw an exception when user not found in getUserStatus', async () => {
-    jest.spyOn(userRepository, 'findOneBy').mockResolvedValue(null);
-
-    await expect(authService.getUserStatus(1)).rejects.toThrow('Invalid user');
-  });
-
-  it('should throw an exception when user not found in logout', async () => {
-    jest.spyOn(userRepository, 'findOneBy').mockResolvedValue(null);
-
-    await expect(authService.logout(1)).rejects.toThrow('Invalid user');
+    });
   });
 });

@@ -15,7 +15,7 @@ services:
     depends_on:
       - postgres
       - mongodb
-    command: sh -c "sleep 10 && npm run start:dev"
+    command: npm run start:dev
 
   postgres:
     image: postgres:latest
@@ -28,11 +28,6 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
 
   mongodb:
     image: mongo:latest
@@ -41,11 +36,6 @@ services:
       - "27017:27017"
     volumes:
       - mongo_data:/data/db
-    healthcheck:
-      test: ["CMD", "mongo", "--eval", "db.runCommand({ ping: 1 })"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
 
 volumes:
   postgres_data:

@@ -20,9 +20,13 @@ export class AuthService {
     const user = this.userRepository.create({
       ...createUserDto,
       password: hashedPassword,
+      username: createUserDto.username || 'Anonymous',
+      photo: createUserDto.photo || '/default-avatar.png',
+      isActive: true,
     });
-    await this.userRepository.save(user);
-    return this.generateToken(user);
+
+    const savedUser = await this.userRepository.save(user);
+    return this.generateResponse(savedUser);
   }
 
   async login(loginUserDto: LoginUserDto) {
@@ -35,11 +39,9 @@ export class AuthService {
     ) {
       throw new UnauthorizedException('Invalid credentials');
     }
-
     user.isActive = true;
     await this.userRepository.save(user);
-
-    return this.generateToken(user);
+    return this.generateResponse(user);
   }
 
   async logout(userId: number) {
@@ -47,22 +49,33 @@ export class AuthService {
     if (!user) {
       throw new UnauthorizedException('Invalid user');
     }
+
     user.isActive = false;
     await this.userRepository.save(user);
 
     return { message: 'Successfully logged out' };
   }
+
   async getUserStatus(userId: number) {
     const user = await this.userRepository.findOneBy({ id: userId });
     if (!user) {
       throw new UnauthorizedException('Invalid user');
     }
+
     return { isActive: user.isActive };
   }
 
-  private generateToken(user: User) {
+  private generateResponse(user: User) {
     return {
-      access_token: this.jwtService.sign({ email: user.email, sub: user.id }),
+      token: this.jwtService.sign(
+        { email: user.email, sub: user.id },
+        { expiresIn: '15m' },
+      ),
+      userId: user.id,
+      username: user.username || 'Anonymous',
+      photo: user.photo || '/default-avatar.png',
+      email: user.email,
+      isActive: user.isActive,
     };
   }
 }
